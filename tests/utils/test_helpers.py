@@ -13,12 +13,21 @@
 Unit tests for chunk module.
 
 """
+import io
 import unittest
 
 from spine_engine.project_item.connection import Connection, FilterSettings
 from spinedb_api.filters.scenario_filter import SCENARIO_FILTER_TYPE
 from spinedb_api.helpers import remove_credentials_from_url
-from spine_engine.utils.helpers import make_dag, gather_leaf_data, get_file_size, required_items_for_execution
+from spine_engine.utils.helpers import (
+    dump_json_beautifully,
+    fails_if_memory_only,
+    make_dag,
+    gather_leaf_data,
+    get_file_size,
+    required_items_for_execution,
+    root_package_name,
+)
 
 
 class TestRequiredItemsForExecution(unittest.TestCase):
@@ -185,6 +194,52 @@ class TestGetFileSize(unittest.TestCase):
         expected_output = "2.0 GB"
         output = get_file_size(s)
         self.assertEqual(expected_output, output)
+
+
+class TestFailsIfVirtual(unittest.TestCase):
+    class _Foo:
+        def __init__(self, is_virtual):
+            self._is_virtual = is_virtual
+
+        @property
+        def is_virtual(self):
+            return self._is_virtual
+
+        @fails_if_memory_only
+        def return_arg(self, arg):
+            return arg
+
+    def test_raises_when_instance_is_virtual(self):
+        foo = self._Foo(is_virtual=True)
+        self.assertRaises(RuntimeError, foo.return_arg, 1)
+
+    def test_does_not_raise_when_instance_is_physical(self):
+        foo = self._Foo(is_virtual=False)
+        self.assertEqual(foo.return_arg(1), 1)
+
+
+class TestRootPackageName(unittest.TestCase):
+    def test_package_name(self):
+        self.assertEqual(root_package_name(fails_if_memory_only), "spine_engine")
+
+
+class TestDumpJsonBeautifully(unittest.TestCase):
+    def test_keys_are_sorted(self):
+        data = {
+            "z": 3,
+            "y": 99,
+            "x": 1,
+        }
+        stream = io.StringIO()
+        dump_json_beautifully(data, stream)
+        self.assertEqual(
+            stream.getvalue(),
+            """{
+    "x": 1,
+    "y": 99,
+    "z": 3
+}""",
+        )
 
 
 if __name__ == '__main__':

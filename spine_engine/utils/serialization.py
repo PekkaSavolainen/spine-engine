@@ -25,8 +25,8 @@ def path_in_dir(path, directory):
     """Returns True if the given path is in the given directory.
 
     Args:
-        path (str): path to test
-        directory (str): directory to test against
+        path (Path or str): path to test
+        directory (Path or str): directory to test against
 
     Returns:
         bool: True if path is in directory, False otherwise
@@ -45,17 +45,19 @@ def serialize_path(path, project_dir):
     If path is in project_dir, converts the path to relative.
 
     Args:
-        path (str): path to serialize
-        project_dir (str): path to the project directory
+        path (Path or str): path to serialize
+        project_dir (Path or str): path to the project directory
 
     Returns:
         dict: Dictionary representing the given path
     """
+    path = Path(path)
+    project_dir = Path(project_dir)
     is_relative = path_in_dir(path, project_dir)
     serialized = {
         "type": "path",
         "relative": is_relative,
-        "path": os.path.relpath(path, project_dir).replace(os.sep, "/") if is_relative else path.replace(os.sep, "/"),
+        "path": (path.relative_to(project_dir) if is_relative else path).as_posix(),
     }
     return serialized
 
@@ -100,18 +102,18 @@ def deserialize_path(serialized, project_dir):
 
     Args:
         serialized (dict): a serialized path or URL
-        project_dir (str): path to the project directory
+        project_dir (Path or str): path to the project directory
 
     Returns:
-        str: Path or URL as string
+        Path or str: Path or URL as string
     """
     if not isinstance(serialized, dict):
-        return serialized
+        return Path(serialized)
     try:
         path_type = serialized["type"]
         if path_type == "path":
             path = serialized["path"]
-            return os.path.normpath(os.path.join(project_dir, path) if serialized["relative"] else path)
+            return Path(os.path.normpath(os.path.join(project_dir, path) if serialized["relative"] else path))
         if path_type == "file_url":
             path = serialized["path"]
             if serialized["relative"]:

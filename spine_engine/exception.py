@@ -20,3 +20,47 @@ class EngineInitFailed(Exception):
 
 class RemoteEngineInitFailed(Exception):
     """Raised when initializing the remote server connection fails."""
+
+
+class InstanceIsMemoryOnly(Exception):
+    """Raised when project or project component is memory-only."""
+
+
+class UnrecognizedNodeType(Exception):
+    """Raised when node dict contains an unrecognized node type."""
+
+
+class ProjectComponentNotFound(Exception):
+    """Raised when node, edge, jump or specification is not found."""
+
+
+class NameContainsInvalidCharacters(Exception):
+    """Raised when a name contains invalid characters."""
+
+
+class DuplicateName(Exception):
+    """Raised when a duplicate name exists."""
+
+
+class DuplicateShortName(Exception):
+    """Raised when a duplicate short name exists."""
+
+
+class ProjectVersionTooHigh(Exception):
+    """Raised when project version is higher than the currently supported one."""
+
+
+class ProjectUpgradeFailed(Exception):
+    """Raised when project upgrade failed."""
+
+
+class ItemsVersionTooHigh(Exception):
+    """Raised when items version is higher than the currently installed items package."""
+
+
+class InvalidConnection(Exception):
+    """Raised when adding a connection would result in broken DAG."""
+
+
+class InvalidJump(Exception):
+    """Raised when jump is not valid."""

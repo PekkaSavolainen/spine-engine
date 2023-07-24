@@ -8,28 +8,33 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""Provides the ProjectItemInfo class."""
+"""Contains project-specific settings."""
+
+import dataclasses
 
 
-class ProjectItemInfo:
-    """General project item information."""
+@dataclasses.dataclass
+class ProjectSettings:
+    """Spine Toolbox project settings."""
 
-    @staticmethod
-    def item_category():
-        """
-        Returns the item category string, e.g., "Tools".
+    enable_execute_all: bool = True
 
-        Returns:
-            str: item's category
-        """
-        raise NotImplementedError()
-
-    @staticmethod
-    def item_type():
-        """
-        Returns the item type string, e.g., "Importer".
+    def to_dict(self):
+        """Serializes the settings into a dictionary.
 
         Returns:
-            str: item's type
+            dict: serialized settings
         """
-        raise NotImplementedError()
+        return dataclasses.asdict(self)
+
+    @staticmethod
+    def from_dict(settings_dict):
+        """Deserializes settings from dictionary.
+
+        Args:
+            settings_dict (dict): serialized settings
+
+        Returns:
+            ProjectSettings: deserialized settings
+        """
+        return ProjectSettings(**settings_dict)

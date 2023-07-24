@@ -90,25 +90,17 @@ class SpineEngine:
 
     def __init__(
         self,
-        items=None,
-        specifications=None,
-        connections=None,
-        jumps=None,
+        project,
         items_module_name="spine_items",
         settings=None,
-        project_dir=None,
         execution_permits=None,
         debug=False,
     ):
         """
         Args:
-            items (dict): A mapping from item name to item dict
-            specifications (dict(str,list(dict))): A mapping from item type to list of specification dicts.
-            connections (list of dict): List of connection dicts
-            jumps (list of dict, optional): List of jump dicts
+            project (Project): project to execute
             items_module_name (str): name of the Python module that contains project items
             settings (dict): Toolbox execution settings.
-            project_dir (str): Path to project directory.
             execution_permits (dict(str,bool)): A mapping from item name to a boolean value, False indicating that
                 the item is not executed
             debug (bool): Whether debug mode is active or not.
@@ -118,13 +110,9 @@ class SpineEngine:
         """
         super().__init__()
         self._queue = mp.Queue()
-        if items is None:
-            items = {}
-        self._items = items
         if execution_permits is None:
             execution_permits = {}
         self._execution_permits = execution_permits
-        connections = list(map(Connection.from_dict, connections))  # Deserialize connections
         project_item_loader = ProjectItemLoader()
         self._executable_item_classes = project_item_loader.load_executable_item_classes(items_module_name)
         required_items = required_items_for_execution(

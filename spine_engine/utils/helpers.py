@@ -20,12 +20,14 @@ import datetime
 import itertools
 import time
 import json
+from functools import wraps
 from pathlib import Path
 from enum import Enum, auto, unique
 import networkx
 from jupyter_client.kernelspec import find_kernel_specs
 from spinedb_api.spine_io.gdx_utils import find_gams_directory
 from ..config import PYTHON_EXECUTABLE, JULIA_EXECUTABLE, GAMS_EXECUTABLE, EMBEDDED_PYTHON
+from ..exception import InstanceIsMemoryOnly
 
 
 @unique
@@ -65,17 +67,26 @@ class AppSettings:
     A QSettings replacement.
     """
 
+    APP_ROOT_KEY = "appSettings"
+
     def __init__(self, settings):
         """
-        Init.
-
         Args:
-            settings (dict)
+            settings (dict): settings as dictionary
         """
         self._settings = settings
 
-    def value(self, key, defaultValue=""):
-        return self._settings.get(key, defaultValue)
+    def value(self, key, default_value=""):
+        """Gets value for given key.
+
+        Args:
+            key (str): key
+            default_value (Any): value to return if key is not found
+
+        Returns:
+            Any: value corresponding to key
+        """
+        return self._settings.get(key, default_value)
 
 
 def shorten(name):
@@ -252,7 +263,7 @@ def get_julia_env(settings):
     return julia, project
 
 
-def required_items_for_execution(items, connections, executable_item_classes, execution_permits):
+def required_items_for_execution(project, executable_item_classes, execution_permits):
     """Builds a list of names of items that are required for execution.
 
     An item is required if
@@ -261,8 +272,7 @@ def required_items_for_execution(items, connections, executable_item_classes, ex
     - the item is part of a filtered fork that contains an item that has an execution permit
 
     Args:
-        items (dict): mapping from item name to item dict
-        connections (list of Connection): connections
+        project (Project): project
         executable_item_classes (dict): mapping from item type to its executable class
         execution_permits (dict): item execution permits
 
@@ -531,3 +541,27 @@ class PartCount:
 
     def __repr__(self):
         return str(self._count)
+
+
+def root_package_name(obj):
+    """Returns the root package name of given object.
+
+    Args:
+        obj (object): any object
+
+    Returns:
+        str: package name
+    """
+    return obj.__module__.partition(".")[0]
+
+
+def dump_json_beautifully(obj, out_stream):
+    """Dumps obj as human-readable JSON into given stream.
+
+    Sorts keys, so we can't rely on dictionary ordering when loading the data.
+
+    Args:
+        obj (object): data to dump
+        out_stream (IO): target stream
+    """
+    json.dump(obj, out_stream, sort_keys=True, indent=4)

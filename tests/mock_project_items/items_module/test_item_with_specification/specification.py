@@ -8,28 +8,11 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-"""Provides the ProjectItemInfo class."""
+"""This module contains a project item specification for testing purposes."""
+from spine_engine.project.project_item_specification import ProjectItemSpecification
 
 
-class ProjectItemInfo:
-    """General project item information."""
-
-    @staticmethod
-    def item_category():
-        """
-        Returns the item category string, e.g., "Tools".
-
-        Returns:
-            str: item's category
-        """
-        raise NotImplementedError()
-
+class TestSpecification(ProjectItemSpecification):
     @staticmethod
     def item_type():
-        """
-        Returns the item type string, e.g., "Importer".
-
-        Returns:
-            str: item's type
-        """
-        raise NotImplementedError()
+        return "Test Project Item with Specification"
