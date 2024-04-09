@@ -60,11 +60,12 @@ exclude = [
 [tool.coverage.run]
 source = ["spine_engine"]
 branch = true
+concurrency = ["multiprocessing", "thread"]
+disable_warnings = ["no-data-collected"]
 
 [tool.coverage.report]
 ignore_errors = true
 
 [tool.black]
 line-length = 120
-skip-string-normalization = true
 exclude = '\.git'

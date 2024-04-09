@@ -1,5 +1,6 @@
 ######################################################################################################################
 # Copyright (C) 2017-2022 Spine project consortium
+# Copyright Spine Engine contributors
 # This file is part of Spine Engine.
 # Spine Engine is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General
 # Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option)
@@ -8,11 +9,7 @@
 # Public License for more details. You should have received a copy of the GNU Lesser General Public License along with
 # this program. If not, see <http://www.gnu.org/licenses/>.
 ######################################################################################################################
-
-"""
-Contains the SpineEngine class for running Spine Toolbox DAGs.
-
-"""
+""" Contains the SpineEngine class for running Spine Toolbox DAGs. """
 from enum import Enum, unique
 import os
 import threading
@@ -262,7 +259,8 @@ class SpineEngine:
         Note that this method is called multiple times for each item:
         Once for the backward pipeline, and once for each filtered execution in the forward pipeline."""
         item_dict = self._items[item_name]
-        prompt_queue = self._prompt_queues[item_name] = mp.Queue()
+        prompt_queue = mp.Queue()
+        self._prompt_queues[id(prompt_queue)] = prompt_queue
         logger = QueueLogger(
             self._queue, item_name, prompt_queue, self._answered_prompts, silent=direction is ED.BACKWARD
         )
@@ -300,9 +298,9 @@ class SpineEngine:
                 break
         self._thread.join()
 
-    def answer_prompt(self, item_name, accepted):
-        """Answers the prompt for the specified item, either accepting or rejecting it."""
-        self._prompt_queues[item_name].put(accepted)
+    def answer_prompt(self, prompter_id, answer):
+        """Answers the prompt for the specified prompter id."""
+        self._prompt_queues[prompter_id].put(answer)
 
     def wait(self):
         """Waits until engine execution has finished."""
@@ -336,14 +334,14 @@ class SpineEngine:
         if event.event_type == DagsterEventType.STEP_START:
             direction, _, solid_name = event.solid_name.partition("_")
             item_name = self._items_by_solids[solid_name]
-            self._queue.put(('exec_started', {"item_name": item_name, "direction": direction}))
+            self._queue.put(("exec_started", {"item_name": item_name, "direction": direction}))
         elif event.event_type == DagsterEventType.STEP_FAILURE and self._state != SpineEngineState.USER_STOPPED:
             direction, _, solid_name = event.solid_name.partition("_")
             item_name = self._items_by_solids[solid_name]
             self._state = SpineEngineState.FAILED
             self._queue.put(
                 (
-                    'exec_finished',
+                    "exec_finished",
                     {
                         "item_name": item_name,
                         "direction": direction,
@@ -369,7 +367,7 @@ class SpineEngine:
                 item_finish_state = ItemExecutionFinishState.SUCCESS
             self._queue.put(
                 (
-                    'exec_finished',
+                    "exec_finished",
                     {
                         "item_name": item_name,
                         "direction": direction,
@@ -388,7 +386,7 @@ class SpineEngine:
             item_finish_state = ItemExecutionFinishState[state_value]
             self._queue.put(
                 (
-                    'exec_finished',
+                    "exec_finished",
                     {
                         "item_name": item_name,
                         "direction": direction,
@@ -411,7 +409,7 @@ class SpineEngine:
         item.stop_execution()
         self._queue.put(
             (
-                'exec_finished',
+                "exec_finished",
                 {
                     "item_name": item.name,
                     "direction": str(ED.FORWARD),
@@ -735,8 +733,8 @@ class SpineEngine:
         if filters is None:
             return []
         filter_configs_list = []
-        for filter_type, names in filters.items():
-            filter_configs = [filter_config(filter_type, name) for name in names]
+        for filter_type, values in filters.items():
+            filter_configs = [filter_config(filter_type, value) for value in values]
             if not filter_configs:
                 continue
             filter_configs_list.append(filter_configs)
